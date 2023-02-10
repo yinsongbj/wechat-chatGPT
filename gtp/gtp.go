@@ -76,7 +76,7 @@ func Completions(msg string) (string, error) {
 	Authorization := "Bearer " + apiKey
 	log.Printf("Authorization : %v", string(Authorization))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer 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")
+	req.Header.Set("Authorization", "Bearer sk-xxxx")
 	//log.Printf("request gtp json string : %v", string(requestData))
 	//log.Printf("req : %v", req)
 	client := &http.Client{}
