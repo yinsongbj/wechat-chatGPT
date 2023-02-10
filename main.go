@@ -128,6 +128,7 @@ func ReplyText(SenderName string, UserID string, Content string) string {
 		return ""
 	}
 	requestText = UserService.GetUserSessionContext(UserID) + requestText
+	log.Printf("gtp requestText: %v \n", requestText)
 	reply, err := gtp.Completions(requestText)
 	if err != nil {
 		log.Printf("gtp request error: %v \n", err)
