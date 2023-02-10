@@ -127,7 +127,7 @@ func ReplyText(SenderName string, UserID string, Content string) string {
 	if requestText == "" {
 		return ""
 	}
-	requestText = UserService.GetUserSessionContext(UserID) + requestText
+	//requestText = UserService.GetUserSessionContext(UserID) + requestText
 	log.Printf("gtp requestText: %v \n", requestText)
 	reply, err := gtp.Completions(requestText)
 	if err != nil {
@@ -142,7 +142,8 @@ func ReplyText(SenderName string, UserID string, Content string) string {
 	reply = strings.TrimSpace(reply)
 	reply = strings.Trim(reply, "\n")
 	// 设置上下文
-	UserService.SetUserSessionContext(UserID, Content, reply)
+	//UserService.SetUserSessionContext(UserID, Content, reply)
+	reply = "本消息由灵境魔盒ChatGPT回复：\n" + reply
 	return reply
 }
 
