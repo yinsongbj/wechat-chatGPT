@@ -70,10 +70,12 @@ func Completions(msg string) (string, error) {
 	apiKey := config.LoadConfig().ApiKey
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
-	log.Printf("apiKey : %v", string(apiKey))
+	log.Printf("req : %v", req)
 	client := &http.Client{}
 	response, err := client.Do(req)
+	log.Printf("response : %v", response)
 	if err != nil {
+		log.Printf("err : %v", err)
 		return "", err
 	}
 	defer response.Body.Close()
