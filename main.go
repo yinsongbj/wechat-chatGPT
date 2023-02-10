@@ -143,7 +143,7 @@ func ReplyText(SenderName string, UserID string, Content string) string {
 	reply = strings.Trim(reply, "\n")
 	// 设置上下文
 	//UserService.SetUserSessionContext(UserID, Content, reply)
-	reply = "本消息由灵境魔盒ChatGPT回复：\n" + reply
+	//reply = "本消息由灵境魔盒ChatGPT回复：\n" + reply
 	return reply
 }
 
