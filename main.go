@@ -127,6 +127,7 @@ func ReplyText(SenderName string, UserID string, Content string) string {
 	if requestText == "" {
 		return ""
 	}
+	requestText = UserService.GetUserSessionContext(UserID) + requestText
 	reply, err := gtp.Completions(requestText)
 	if err != nil {
 		log.Printf("gtp request error: %v \n", err)
@@ -140,7 +141,7 @@ func ReplyText(SenderName string, UserID string, Content string) string {
 	reply = strings.TrimSpace(reply)
 	reply = strings.Trim(reply, "\n")
 	// 设置上下文
-	UserService.SetUserSessionContext(SenderName, Content, reply)
+	UserService.SetUserSessionContext(UserID, Content, reply)
 	return reply
 }
 
