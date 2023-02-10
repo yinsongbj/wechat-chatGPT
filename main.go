@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -24,6 +25,9 @@ const wxToken = "jindingwen" // 这里填微信开发平台里设置的 Token
 var reqGroup singleflight.Group
 
 var UserService = service.NewUserService()
+
+// UserQuestion 用户询问内容
+var UserQuestion = make(map[string]string, 0)
 
 func init() {
 	log.SetOutput(os.Stdout)
@@ -102,7 +106,15 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		}
 		replyMsg = ":) 感谢你发现了这里，灵境魔盒的AiGPT很高兴为您服务～"
 	} else if xmlMsg.MsgType == "text" {
+		val, ok := UserQuestion[xmlMsg.FromUserName]
+		if ok {
+			fmt.Printf("找到了  值为%v", val)
+			if val == xmlMsg.Content {
+				return //相同的提问直接跳过
+			}
+		}
 		replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
+		UserQuestion[xmlMsg.FromUserName] = xmlMsg.Content
 	} else {
 		util.TodoEvent(w)
 		return
@@ -127,7 +139,7 @@ func ReplyText(SenderName string, UserID string, Content string) string {
 	if requestText == "" {
 		return ""
 	}
-	//requestText = UserService.GetUserSessionContext(UserID) + requestText
+	requestText = UserService.GetUserSessionContext(UserID) + requestText
 	log.Printf("gtp requestText: %v \n", requestText)
 	reply, err := gtp.Completions(requestText)
 	if err != nil {
@@ -142,7 +154,7 @@ func ReplyText(SenderName string, UserID string, Content string) string {
 	reply = strings.TrimSpace(reply)
 	reply = strings.Trim(reply, "\n")
 	// 设置上下文
-	//UserService.SetUserSessionContext(UserID, Content, reply)
+	UserService.SetUserSessionContext(UserID, Content, reply)
 	//reply = "本消息由灵境魔盒ChatGPT回复：\n" + reply
 	return reply
 }
