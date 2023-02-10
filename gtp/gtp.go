@@ -46,6 +46,12 @@ type ChatGPTRequestBody struct {
 // -H "Content-Type: application/json"
 // -H "Authorization: Bearer your chatGPT key"
 // -d '{"model": "text-davinci-003", "prompt": "give me good song", "temperature": 0, "max_tokens": 7}'
+/*
+curl https://api.openai.com/v1/completions \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer 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" \
+-d '{"model": "text-davinci-003", "prompt": "give me good song", "temperature": 0, "max_tokens": 7}'
+*/
 func Completions(msg string) (string, error) {
 	requestBody := ChatGPTRequestBody{
 		Model:            "text-davinci-003",
@@ -57,33 +63,36 @@ func Completions(msg string) (string, error) {
 		PresencePenalty:  0,
 	}
 	requestData, err := json.Marshal(requestBody)
-
 	if err != nil {
 		return "", err
 	}
-	log.Printf("request gtp json string : %v", string(requestData))
-	req, err := http.NewRequest("POST", BASEURL+"completions", bytes.NewBuffer(requestData))
-	if err != nil {
+
+	req, err1 := http.NewRequest("POST", "https://api.openai.com/v1/completions", bytes.NewBuffer(requestData))
+	if err1 != nil {
 		return "", err
 	}
 
 	apiKey := config.LoadConfig().ApiKey
+	Authorization := "Bearer " + apiKey
+	log.Printf("Authorization : %v", string(Authorization))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+apiKey)
-	log.Printf("req : %v", req)
+	req.Header.Set("Authorization", "Bearer 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")
+	//log.Printf("request gtp json string : %v", string(requestData))
+	//log.Printf("req : %v", req)
 	client := &http.Client{}
-	response, err := client.Do(req)
-	log.Printf("response : %v", response)
-	if err != nil {
-		log.Printf("err : %v", err)
-		return "", err
+	response, err2 := client.Do(req)
+	if err2 != nil {
+		log.Printf("error : %v", err2)
+		return "", err2
 	}
+
 	defer response.Body.Close()
+	log.Printf("response : %v", response)
 	if response.StatusCode != 200 {
 		return "", errors.New(fmt.Sprintf("gtp api status code not equals 200,code is %d", response.StatusCode))
 	}
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
+	body, err3 := ioutil.ReadAll(response.Body)
+	if err3 != nil {
 		return "", err
 	}
 
