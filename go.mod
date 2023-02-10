@@ -1,4 +1,4 @@
-module wx-ChatGPT
+module wechat-chatGPT
 
 go 1.19
 
@@ -13,5 +13,6 @@ require (
 
 require (
 	github.com/ajg/form v1.5.1 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 )

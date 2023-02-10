@@ -11,16 +11,19 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-	"strconv"
+	"strings"
 	"time"
-	"wx-ChatGPT/chatGPT"
-	"wx-ChatGPT/convert"
-	"wx-ChatGPT/util"
+	"wechat-chatGPT/convert"
+	"wechat-chatGPT/gtp"
+	"wechat-chatGPT/service"
+	"wechat-chatGPT/util"
 )
 
-const wxToken = "" // 这里填微信开发平台里设置的 Token
+const wxToken = "jindingwen" // 这里填微信开发平台里设置的 Token
 
 var reqGroup singleflight.Group
+
+var UserService = service.NewUserService()
 
 func init() {
 	log.SetOutput(os.Stdout)
@@ -39,9 +42,9 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	// 微信接入校验
-	r.Get("/weChatGPT", wechatCheck)
+	r.Get("/botGPT", wechatCheck)
 	// 微信消息处理
-	r.Post("/weChatGPT", wechatMsgReceive)
+	r.Post("/botGPT", wechatMsgReceive)
 
 	l, err := net.Listen("tcp", ":7458")
 	if err != nil {
@@ -88,23 +91,22 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 	// 关注公众号事件
 	if xmlMsg.MsgType == "event" {
 		if xmlMsg.Event == "unsubscribe" {
-			chatGPT.DefaultGPT.DeleteUser(xmlMsg.FromUserName)
+			//chatGPT.DefaultGPT.DeleteUser(xmlMsg.FromUserName)
+			log.Infof("[取消订阅] From: %s", xmlMsg.FromUserName)
+			return
 		}
 		if xmlMsg.Event != "subscribe" {
 			util.TodoEvent(w)
+			log.Infof("[订阅] From: %s", xmlMsg.FromUserName)
 			return
 		}
-		replyMsg = ":) 感谢你发现了这里"
+		replyMsg = ":) 感谢你发现了这里，灵境魔盒的AiGPT很高兴为您服务～"
 	} else if xmlMsg.MsgType == "text" {
-		msg, _, _ := reqGroup.Do(strconv.FormatInt(xmlMsg.MsgId, 10), func() (interface{}, error) {
-			return chatGPT.DefaultGPT.SendMsg(xmlMsg.Content, xmlMsg.FromUserName), nil
-		})
-		replyMsg = msg.(string)
+		replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
 	} else {
 		util.TodoEvent(w)
 		return
 	}
-
 	textRes := &convert.TextRes{
 		ToUserName:   xmlMsg.FromUserName,
 		FromUserName: xmlMsg.ToUserName,
@@ -116,4 +118,39 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorln(err)
 	}
+}
+
+// ReplyText 发送文本消息到群
+func ReplyText(SenderName string, UserID string, Content string) string {
+	// 替换掉@文本，设置会话上下文，然后向GPT发起请求。
+	requestText := buildRequestText(SenderName, UserID, Content)
+	if requestText == "" {
+		return ""
+	}
+	reply, err := gtp.Completions(requestText)
+	if err != nil {
+		log.Printf("gtp request error: %v \n", err)
+		return "我脑子有些乱了，等我捋一捋思路。"
+	}
+	if reply == "" {
+		return "为啥我脑子空空如也？我傻了吗？"
+	}
+
+	// 回复@我的用户
+	reply = strings.TrimSpace(reply)
+	reply = strings.Trim(reply, "\n")
+	// 设置上下文
+	UserService.SetUserSessionContext(SenderName, Content, reply)
+	return reply
+}
+
+// buildRequestText 构建请求GPT的文本，替换掉机器人名称，然后检查是否有上下文，如果有拼接上
+func buildRequestText(NickName string, SenderID string, Content string) string {
+	replaceText := "@" + NickName
+	requestText := strings.TrimSpace(strings.ReplaceAll(Content, replaceText, ""))
+	if requestText == "" {
+		return ""
+	}
+	requestText = UserService.GetUserSessionContext(SenderID) + requestText
+	return requestText
 }
