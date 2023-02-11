@@ -104,13 +104,17 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			log.Infof("[订阅] From: %s", xmlMsg.FromUserName)
 			return
 		}
-		replyMsg = ":) 感谢你发现了这里，灵境魔盒的AiGPT很高兴为您服务～"
+		replyMsg = ":) 感谢你发现了这里，灵境魔盒的AiGPT很高兴为您服务"
 	} else if xmlMsg.MsgType == "text" {
 		val, ok := UserQuestion[xmlMsg.FromUserName]
 		if ok {
 			fmt.Printf("找到了  值为%v", val)
 			if val == xmlMsg.Content {
-				return //相同的提问直接跳过
+				_, err := w.Write([]byte(""))
+				if err != nil {
+					log.Errorln(err)
+				}
+				return //相同的提问直接跳过，返回空字符串
 			}
 		}
 		replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
