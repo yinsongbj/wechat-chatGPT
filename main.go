@@ -133,16 +133,18 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		util.TodoEvent(w)
 		return
 	}
-	textRes := &convert.TextRes{
-		ToUserName:   xmlMsg.FromUserName,
-		FromUserName: xmlMsg.ToUserName,
-		CreateTime:   time.Now().Unix(),
-		MsgType:      "text",
-		Content:      replyMsg,
-	}
-	_, err := w.Write(textRes.ToXml())
-	if err != nil {
-		log.Errorln(err)
+	if len(replyMsg) > 0 {
+		textRes := &convert.TextRes{
+			ToUserName:   xmlMsg.FromUserName,
+			FromUserName: xmlMsg.ToUserName,
+			CreateTime:   time.Now().Unix(),
+			MsgType:      "text",
+			Content:      replyMsg,
+		}
+		_, err := w.Write(textRes.ToXml())
+		if err != nil {
+			log.Errorln(err)
+		}
 	}
 }
 
