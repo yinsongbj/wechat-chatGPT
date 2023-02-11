@@ -26,8 +26,8 @@ var reqGroup singleflight.Group
 
 var UserService = service.NewUserService()
 
-// UserQuestion 用户询问内容
-var UserQuestion = make(map[string]string, 0)
+// UserMsgID	用户消息ID
+var UserMsgID = make(map[int64]string, 0)
 
 func init() {
 	log.SetOutput(os.Stdout)
@@ -84,7 +84,7 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	xmlMsg := convert.ToTextMsg(body)
 
-	log.Infof("[消息接收] Type: %s, From: %s, MsgId: %d, Content: %s", xmlMsg.MsgType, xmlMsg.FromUserName, xmlMsg.MsgId, xmlMsg.Content)
+	log.Infof("[消息接收] Type: %s, From: %s, MsgId: %d, CreateTime: %d, Content: %s", xmlMsg.MsgType, xmlMsg.FromUserName, xmlMsg.MsgId, xmlMsg.CreateTime, xmlMsg.Content)
 
 	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
@@ -106,32 +106,37 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		}
 		replyMsg = ":) 感谢你发现了这里，灵境魔盒的AiGPT很高兴为您服务"
 	} else if xmlMsg.MsgType == "text" {
-		val, ok := UserQuestion[xmlMsg.FromUserName]
-
+		val, ok := UserMsgID[xmlMsg.MsgId]
 		if ok {
-			fmt.Printf("找到了  值为%v", val)
-			if val == xmlMsg.Content {
-				return //相同的提问直接跳过，返回空字符串
+			fmt.Printf("找到了,值为 %v", val)
+			if len(val) > 0 {
+				replyMsg = UserMsgID[xmlMsg.MsgId]
+				delete(UserMsgID, xmlMsg.MsgId)
 			}
+		} else {
+			UserMsgID[xmlMsg.MsgId] = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
 		}
-		fmt.Printf("UserQuestion>>> %v", UserQuestion[xmlMsg.FromUserName])
-		UserQuestion[xmlMsg.FromUserName] = xmlMsg.Content
-		replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
-		fmt.Printf("UserQuestion<<< %v", UserQuestion[xmlMsg.FromUserName])
 	} else {
 		util.TodoEvent(w)
 		return
 	}
-	textRes := &convert.TextRes{
-		ToUserName:   xmlMsg.FromUserName,
-		FromUserName: xmlMsg.ToUserName,
-		CreateTime:   time.Now().Unix(),
-		MsgType:      "text",
-		Content:      replyMsg,
-	}
-	_, err := w.Write(textRes.ToXml())
-	if err != nil {
-		log.Errorln(err)
+	if len(replyMsg) > 0 {
+		textRes := &convert.TextRes{
+			ToUserName:   xmlMsg.FromUserName,
+			FromUserName: xmlMsg.ToUserName,
+			CreateTime:   time.Now().Unix(),
+			MsgType:      "text",
+			Content:      replyMsg,
+		}
+		_, err := w.Write(textRes.ToXml())
+		if err != nil {
+			log.Errorln(err)
+		}
+	} else {
+		_, err := w.Write([]byte(""))
+		if err != nil {
+			log.Errorln(err)
+		}
 	}
 }
 
