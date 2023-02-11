@@ -118,8 +118,8 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		fmt.Printf("UserQuestion>>> %v", UserQuestion[xmlMsg.FromUserName])
-		replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
 		UserQuestion[xmlMsg.FromUserName] = xmlMsg.Content
+		replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
 		fmt.Printf("UserQuestion<<< %v", UserQuestion[xmlMsg.FromUserName])
 	} else {
 		util.TodoEvent(w)
