@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -116,12 +115,14 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 				log.Errorln(err)
 			}
 		} else {
-			fmt.Printf("找到了  值为%v", val)
+			log.Infof("找到了  值为%v", val)
 			if val == xmlMsg.Content {
+				log.Infof("*** 值相同 ***")
 				//return //相同的提问直接跳过，返回空字符串
 				answer, ok := UserAnswer[xmlMsg.FromUserName]
 				if ok {
 					replyMsg = answer
+					log.Infof("replyMsg: %s", replyMsg)
 				} else {
 					return
 				}
@@ -129,22 +130,22 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		}
 		temp := ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
 		UserAnswer[xmlMsg.FromUserName] = temp
+		if len(replyMsg) > 0 {
+			textRes := &convert.TextRes{
+				ToUserName:   xmlMsg.FromUserName,
+				FromUserName: xmlMsg.ToUserName,
+				CreateTime:   time.Now().Unix(),
+				MsgType:      "text",
+				Content:      replyMsg,
+			}
+			_, err := w.Write(textRes.ToXml())
+			if err != nil {
+				log.Errorln(err)
+			}
+		}
 	} else {
 		util.TodoEvent(w)
 		return
-	}
-	if len(replyMsg) > 0 {
-		textRes := &convert.TextRes{
-			ToUserName:   xmlMsg.FromUserName,
-			FromUserName: xmlMsg.ToUserName,
-			CreateTime:   time.Now().Unix(),
-			MsgType:      "text",
-			Content:      replyMsg,
-		}
-		_, err := w.Write(textRes.ToXml())
-		if err != nil {
-			log.Errorln(err)
-		}
 	}
 }
 
