@@ -128,8 +128,8 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-		temp := ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
-		UserAnswer[xmlMsg.FromUserName] = temp
+		replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
+		UserAnswer[xmlMsg.FromUserName] = replyMsg
 		if len(replyMsg) > 0 {
 			textRes := &convert.TextRes{
 				ToUserName:   xmlMsg.FromUserName,
