@@ -109,11 +109,11 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		val, ok := UserQuestion[xmlMsg.FromUserName]
 		if !ok {
 			UserQuestion[xmlMsg.FromUserName] = xmlMsg.Content
-			// 空回复，保证返回时间
-			_, err := w.Write([]byte(""))
-			if err != nil {
-				log.Errorln(err)
-			}
+			//// 空回复，保证返回时间
+			//_, err := w.Write([]byte(""))
+			//if err != nil {
+			//	log.Errorln(err)
+			//}
 		} else {
 			log.Infof("找到了  值为%v", val)
 			if val == xmlMsg.Content {
@@ -124,7 +124,7 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 					replyMsg = answer
 					log.Infof("replyMsg: %s", replyMsg)
 				} else {
-					return
+					//return
 				}
 			}
 		}
