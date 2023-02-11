@@ -106,21 +106,27 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		}
 		replyMsg = ":) 感谢你发现了这里，灵境魔盒的AiGPT很高兴为您服务"
 	} else if xmlMsg.MsgType == "text" {
-		val, ok := UserMsgID[xmlMsg.MsgId]
+		_, ok := UserMsgID[xmlMsg.MsgId]
 		if ok {
-			log.Infof("[已经提交]")
-			if len(val) > 0 {
-				log.Infof("[找到答案] < %s", val)
-				replyMsg = UserMsgID[xmlMsg.MsgId]
-				delete(UserMsgID, xmlMsg.MsgId)
-			} else {
-				log.Infof("[答案为空] MsgID:%d", xmlMsg.MsgId)
+			log.Infof("[回复空消息] MsgId:%d", xmlMsg.MsgId)
+			_, err := w.Write([]byte(""))
+			if err != nil {
+				log.Errorln(err)
 			}
+			//log.Infof("[已经提交]")
+			//if len(val) > 0 {
+			//	log.Infof("[找到答案] < %s", val)
+			//	replyMsg = UserMsgID[xmlMsg.MsgId]
+			//	delete(UserMsgID, xmlMsg.MsgId)
+			//} else {
+			//	log.Infof("[答案为空] MsgID:%d", xmlMsg.MsgId)
+			//}
 		} else {
 			UserMsgID[xmlMsg.MsgId] = ""
 			log.Infof("[发起请求] %s", xmlMsg.Content)
-			UserMsgID[xmlMsg.MsgId] = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
-			log.Infof("[设置消息] MsgID:%d, %s", xmlMsg.MsgId, UserMsgID[xmlMsg.MsgId])
+			replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
+			log.Infof("[设置消息] MsgID:%d, %s", xmlMsg.MsgId, replyMsg)
+			delete(UserMsgID, xmlMsg.MsgId)
 		}
 	} else {
 		util.TodoEvent(w)
@@ -140,11 +146,6 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			log.Errorln(err)
 		}
 	} else {
-		log.Infof("[消息为空] MsgId:%d", xmlMsg.MsgId)
-		_, err := w.Write([]byte(""))
-		if err != nil {
-			log.Errorln(err)
-		}
 	}
 }
 
