@@ -116,17 +116,18 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			//}
 		} else {
 			log.Infof("找到了  值为%v", val)
-			if val == xmlMsg.Content {
-				log.Infof("*** 值相同 ***")
-				//return //相同的提问直接跳过，返回空字符串
-				answer, ok := UserAnswer[xmlMsg.FromUserName]
-				if ok {
-					replyMsg = answer
-					log.Infof("replyMsg: %s", replyMsg)
-				} else {
-					//return
-				}
-			}
+			return
+			//if val == xmlMsg.Content {
+			//	log.Infof("*** 值相同 ***")
+			//	//return //相同的提问直接跳过，返回空字符串
+			//	answer, ok := UserAnswer[xmlMsg.FromUserName]
+			//	if ok {
+			//		replyMsg = answer
+			//		log.Infof("replyMsg: %s", replyMsg)
+			//	} else {
+			//		//return
+			//	}
+			//}
 		}
 		replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
 		UserAnswer[xmlMsg.FromUserName] = replyMsg
