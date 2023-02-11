@@ -135,10 +135,10 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		log.Infof("[消息为空] MsgId:%d", xmlMsg.MsgId)
-		//_, err := w.Write([]byte(""))
-		//if err != nil {
-		//	log.Errorln(err)
-		//}
+		_, err := w.Write([]byte(""))
+		if err != nil {
+			log.Errorln(err)
+		}
 	}
 }
 
