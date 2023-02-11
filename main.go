@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -108,12 +107,13 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 	} else if xmlMsg.MsgType == "text" {
 		val, ok := UserMsgID[xmlMsg.MsgId]
 		if ok {
-			fmt.Printf("找到了,值为 %v", val)
+			log.Infof("[找到回答] %s", val)
 			if len(val) > 0 {
 				replyMsg = UserMsgID[xmlMsg.MsgId]
 				delete(UserMsgID, xmlMsg.MsgId)
 			}
 		} else {
+			log.Infof("[发起请求] %s", xmlMsg.Content)
 			UserMsgID[xmlMsg.MsgId] = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
 		}
 	} else {
@@ -128,15 +128,17 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			MsgType:      "text",
 			Content:      replyMsg,
 		}
+		log.Infof("[回复消息] %s", replyMsg)
 		_, err := w.Write(textRes.ToXml())
 		if err != nil {
 			log.Errorln(err)
 		}
 	} else {
-		_, err := w.Write([]byte(""))
-		if err != nil {
-			log.Errorln(err)
-		}
+		log.Infof("[消息为空] MsgId:%d", xmlMsg.MsgId)
+		//_, err := w.Write([]byte(""))
+		//if err != nil {
+		//	log.Errorln(err)
+		//}
 	}
 }
 
