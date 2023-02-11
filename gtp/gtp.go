@@ -87,7 +87,7 @@ func Completions(msg string) (string, error) {
 	}
 
 	defer response.Body.Close()
-	log.Printf("response : %v", response)
+	//log.Printf("response : %v", response)
 	if response.StatusCode != 200 {
 		return "", errors.New(fmt.Sprintf("gtp api status code not equals 200,code is %d", response.StatusCode))
 	}
