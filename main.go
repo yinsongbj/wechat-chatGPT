@@ -114,13 +114,13 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 				replyMsg = UserMsgID[xmlMsg.MsgId]
 				delete(UserMsgID, xmlMsg.MsgId)
 			} else {
-				log.Infof("[答案为空]")
+				log.Infof("[答案为空] MsgID:%d", xmlMsg.MsgId)
 			}
 		} else {
 			UserMsgID[xmlMsg.MsgId] = ""
 			log.Infof("[发起请求] %s", xmlMsg.Content)
 			UserMsgID[xmlMsg.MsgId] = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
-			log.Infof("[设置消息] %s", UserMsgID[xmlMsg.MsgId])
+			log.Infof("[设置消息] MsgID:%d, %s", xmlMsg.MsgId, UserMsgID[xmlMsg.MsgId])
 		}
 	} else {
 		util.TodoEvent(w)
