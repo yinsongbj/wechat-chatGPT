@@ -27,6 +27,7 @@ var UserService = service.NewUserService()
 
 // UserMsgID	用户消息ID
 var UserMsgID = make(map[int64]string, 0)
+var UserQA = make(map[int64]string, 0)
 
 func init() {
 	log.SetOutput(os.Stdout)
@@ -107,12 +108,16 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 	} else if xmlMsg.MsgType == "text" {
 		val, ok := UserMsgID[xmlMsg.MsgId]
 		if ok {
-			log.Infof("[找到回答] %s", val)
+			log.Infof("[已经提交]")
 			if len(val) > 0 {
+				log.Infof("[找到答案] < %s", val)
 				replyMsg = UserMsgID[xmlMsg.MsgId]
 				delete(UserMsgID, xmlMsg.MsgId)
+			} else {
+				log.Infof("[答案为空]")
 			}
 		} else {
+			UserMsgID[xmlMsg.MsgId] = ""
 			log.Infof("[发起请求] %s", xmlMsg.Content)
 			UserMsgID[xmlMsg.MsgId] = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
 		}
