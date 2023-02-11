@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -27,7 +28,6 @@ var UserService = service.NewUserService()
 
 // UserQuestion 用户询问内容
 var UserQuestion = make(map[string]string, 0)
-var UserAnswer = make(map[string]string, 0)
 
 func init() {
 	log.SetOutput(os.Stdout)
@@ -107,46 +107,31 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		replyMsg = ":) 感谢你发现了这里，灵境魔盒的AiGPT很高兴为您服务"
 	} else if xmlMsg.MsgType == "text" {
 		val, ok := UserQuestion[xmlMsg.FromUserName]
-		if !ok {
-			UserQuestion[xmlMsg.FromUserName] = xmlMsg.Content
-			//// 空回复，保证返回时间
-			//_, err := w.Write([]byte(""))
-			//if err != nil {
-			//	log.Errorln(err)
-			//}
-		} else {
-			log.Infof("找到了  值为%v", val)
-			return
-			//if val == xmlMsg.Content {
-			//	log.Infof("*** 值相同 ***")
-			//	//return //相同的提问直接跳过，返回空字符串
-			//	answer, ok := UserAnswer[xmlMsg.FromUserName]
-			//	if ok {
-			//		replyMsg = answer
-			//		log.Infof("replyMsg: %s", replyMsg)
-			//	} else {
-			//		//return
-			//	}
-			//}
+
+		if ok {
+			fmt.Printf("找到了  值为%v", val)
+			if val == xmlMsg.Content {
+				return //相同的提问直接跳过，返回空字符串
+			}
 		}
+		fmt.Printf("UserQuestion>>> %v", UserQuestion[xmlMsg.FromUserName])
+		UserQuestion[xmlMsg.FromUserName] = xmlMsg.Content
 		replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
-		UserAnswer[xmlMsg.FromUserName] = replyMsg
-		if len(replyMsg) > 0 {
-			textRes := &convert.TextRes{
-				ToUserName:   xmlMsg.FromUserName,
-				FromUserName: xmlMsg.ToUserName,
-				CreateTime:   time.Now().Unix(),
-				MsgType:      "text",
-				Content:      replyMsg,
-			}
-			_, err := w.Write(textRes.ToXml())
-			if err != nil {
-				log.Errorln(err)
-			}
-		}
+		fmt.Printf("UserQuestion<<< %v", UserQuestion[xmlMsg.FromUserName])
 	} else {
 		util.TodoEvent(w)
 		return
+	}
+	textRes := &convert.TextRes{
+		ToUserName:   xmlMsg.FromUserName,
+		FromUserName: xmlMsg.ToUserName,
+		CreateTime:   time.Now().Unix(),
+		MsgType:      "text",
+		Content:      replyMsg,
+	}
+	_, err := w.Write(textRes.ToXml())
+	if err != nil {
+		log.Errorln(err)
 	}
 }
 
