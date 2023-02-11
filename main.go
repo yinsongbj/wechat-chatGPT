@@ -117,8 +117,10 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 				return //相同的提问直接跳过，返回空字符串
 			}
 		}
+		fmt.Printf("UserQuestion>>> %v", UserQuestion[xmlMsg.FromUserName])
 		replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
 		UserQuestion[xmlMsg.FromUserName] = xmlMsg.Content
+		fmt.Printf("UserQuestion<<< %v", UserQuestion[xmlMsg.FromUserName])
 	} else {
 		util.TodoEvent(w)
 		return
