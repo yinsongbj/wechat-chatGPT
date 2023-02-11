@@ -28,6 +28,7 @@ var UserService = service.NewUserService()
 
 // UserQuestion 用户询问内容
 var UserQuestion = make(map[string]string, 0)
+var UserAnswer = make(map[string]string, 0)
 
 func init() {
 	log.SetOutput(os.Stdout)
@@ -106,21 +107,28 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		}
 		replyMsg = ":) 感谢你发现了这里，灵境魔盒的AiGPT很高兴为您服务"
 	} else if xmlMsg.MsgType == "text" {
-		_, err := w.Write([]byte(""))
-		if err != nil {
-			log.Errorln(err)
-		}
 		val, ok := UserQuestion[xmlMsg.FromUserName]
-		if ok {
+		if !ok {
+			UserQuestion[xmlMsg.FromUserName] = xmlMsg.Content
+			// 空回复，保证返回时间
+			_, err := w.Write([]byte(""))
+			if err != nil {
+				log.Errorln(err)
+			}
+		} else {
 			fmt.Printf("找到了  值为%v", val)
 			if val == xmlMsg.Content {
-				return //相同的提问直接跳过，返回空字符串
+				//return //相同的提问直接跳过，返回空字符串
+				answer, ok := UserAnswer[xmlMsg.FromUserName]
+				if ok {
+					replyMsg = answer
+				} else {
+					return
+				}
 			}
 		}
-		fmt.Printf("UserQuestion>>> %v", UserQuestion[xmlMsg.FromUserName])
-		UserQuestion[xmlMsg.FromUserName] = xmlMsg.Content
-		replyMsg = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
-		fmt.Printf("UserQuestion<<< %v", UserQuestion[xmlMsg.FromUserName])
+		temp := ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
+		UserAnswer[xmlMsg.FromUserName] = temp
 	} else {
 		util.TodoEvent(w)
 		return
