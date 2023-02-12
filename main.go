@@ -26,8 +26,7 @@ var reqGroup singleflight.Group
 var UserService = service.NewUserService()
 
 // UserMsgID	用户消息ID
-var UserMsgID = make(map[int64]string, 0)
-var UserQA = make(map[int64]string, 0)
+var UserMsgID = make(map[string]string, 0)
 
 func init() {
 	log.SetOutput(os.Stdout)
@@ -106,28 +105,29 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		}
 		replyMsg = ":) 感谢你发现了这里，灵境魔盒的AiGPT很高兴为您服务"
 	} else if xmlMsg.MsgType == "text" {
-		val, ok := UserMsgID[xmlMsg.MsgId]
+		val, ok := UserMsgID[xmlMsg.FromUserName]
 		if ok {
 			log.Infof("[已经提交]")
 			if len(val) > 0 {
 				log.Infof("[找到答案] < %s", val)
-				replyMsg = UserMsgID[xmlMsg.MsgId]
-				delete(UserMsgID, xmlMsg.MsgId)
+				replyMsg = UserMsgID[xmlMsg.FromUserName]
+				delete(UserMsgID, xmlMsg.FromUserName)
 			} else {
-				log.Infof("[答案为空] MsgID:%d", xmlMsg.MsgId)
-				log.Infof("[回复空消息] MsgId:%d", xmlMsg.MsgId)
-				_, err := w.Write([]byte(""))
-				if err != nil {
-					log.Errorln(err)
-				}
-				return
+				//log.Infof("[答案为空] MsgID:%d", xmlMsg.MsgId)
+				//log.Infof("[回复空消息] MsgId:%d", xmlMsg.MsgId)
+				//_, err := w.Write([]byte(""))
+				//if err != nil {
+				//	log.Errorln(err)
+				//}
+				//return
+				replyMsg = "这个我需要思考一下，可能需要一些时间。您等我一下好不好？[在回复任何信息后，提供答案]"
 			}
 		} else {
-			UserMsgID[xmlMsg.MsgId] = ""
+			UserMsgID[xmlMsg.FromUserName] = ""
 			log.Infof("[发起请求] %s", xmlMsg.Content)
-			UserMsgID[xmlMsg.MsgId] = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
-			log.Infof("[设置消息] MsgID:%d, %s", xmlMsg.MsgId, UserMsgID[xmlMsg.MsgId])
-			replyMsg = UserMsgID[xmlMsg.MsgId]
+			UserMsgID[xmlMsg.FromUserName] = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
+			log.Infof("[设置消息] MsgID:%d, %s", xmlMsg.MsgId, UserMsgID[xmlMsg.FromUserName])
+			replyMsg = UserMsgID[xmlMsg.FromUserName]
 		}
 	} else {
 		util.TodoEvent(w)
