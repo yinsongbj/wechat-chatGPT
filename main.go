@@ -105,30 +105,49 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		}
 		replyMsg = ":) 感谢你发现了这里，灵境魔盒的AiGPT很高兴为您服务"
 	} else if xmlMsg.MsgType == "text" {
-		val, ok := UserMsgID[xmlMsg.FromUserName]
-		if ok {
-			log.Infof("[已经提交]")
-			if len(val) > 0 {
-				log.Infof("[找到答案] < %s", val)
-				replyMsg = UserMsgID[xmlMsg.FromUserName]
-				delete(UserMsgID, xmlMsg.FromUserName)
-			} else {
-				//log.Infof("[答案为空] MsgID:%d", xmlMsg.MsgId)
-				//log.Infof("[回复空消息] MsgId:%d", xmlMsg.MsgId)
-				//_, err := w.Write([]byte(""))
-				//if err != nil {
-				//	log.Errorln(err)
-				//}
-				//return
-				replyMsg = "这个我需要思考一下，可能需要一些时间。您等我一下好不好？[在回复任何信息后，提供答案]"
-			}
-		} else {
-			UserMsgID[xmlMsg.FromUserName] = ""
-			log.Infof("[发起请求] %s", xmlMsg.Content)
-			UserMsgID[xmlMsg.FromUserName] = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
-			log.Infof("[设置消息] MsgID:%d, %s", xmlMsg.MsgId, UserMsgID[xmlMsg.FromUserName])
-			replyMsg = UserMsgID[xmlMsg.FromUserName]
+		// 修改为直接回复用户，到新的页面访问
+		timeUnix := time.Now().Unix() //已知的时间戳
+		replyMsg = "为了提高您的试用体验，我们已经专门为ChatGPT开辟了一个新的页面：https://chatgpt3.funscall.com，您可以直接访问。"
+		replyMsg = "<xml>\n  <ToUserName><![CDATA[" + xmlMsg.FromUserName +
+			"]]></ToUserName>\n  <FromUserName><![CDATA[" + xmlMsg.ToUserName +
+			"]]></FromUserName>\n  <CreateTime>" + time.Unix(timeUnix, 0).Format("2006-01-02 15:04:05") +
+			"</CreateTime>\n  <MsgType><![CDATA[news]]></MsgType>\n  " +
+			"<ArticleCount>1</ArticleCount>\n  " +
+			"<Articles>\n    " +
+			"<item>\n      " +
+			"<Title><![CDATA[灵境魔盒ChatGPT体验入口]]></Title>\n      <Description><![CDATA[为了提高您的试用体验，我们已经专门为ChatGPT开辟了一个新的入口，点击直接进入]]></Description>\n      " +
+			"<PicUrl><![CDATA[https://wx.funscall.com/images/chatgpt/banner.png]]></PicUrl>\n      " +
+			"<Url><![CDATA[https://chatgpt3.funscall.com/]]></Url>\n    " +
+			"</item>\n  </Articles>\n</xml>"
+		log.Infof("[回复消息] %s", replyMsg)
+		_, err := w.Write([]byte(replyMsg))
+		if err != nil {
+			log.Errorln(err)
 		}
+		//val, ok := UserMsgID[xmlMsg.FromUserName]
+		//if ok {
+		//	log.Infof("[已经提交]")
+		//	if len(val) > 0 {
+		//		log.Infof("[找到答案] < %s", val)
+		//		replyMsg = UserMsgID[xmlMsg.FromUserName]
+		//		delete(UserMsgID, xmlMsg.FromUserName)
+		//	} else {
+		//		//log.Infof("[答案为空] MsgID:%d", xmlMsg.MsgId)
+		//		//log.Infof("[回复空消息] MsgId:%d", xmlMsg.MsgId)
+		//		//_, err := w.Write([]byte(""))
+		//		//if err != nil {
+		//		//	log.Errorln(err)
+		//		//}
+		//		//return
+		//		replyMsg = "这个我需要思考一下，可能需要一些时间。您等我一下好不好？[在回复任何信息后，提供答案]"
+		//	}
+		//} else {
+		//	UserMsgID[xmlMsg.FromUserName] = ""
+		//	log.Infof("[发起请求] %s", xmlMsg.Content)
+		//	UserMsgID[xmlMsg.FromUserName] = ReplyText(xmlMsg.FromUserName, xmlMsg.FromUserName, xmlMsg.Content)
+		//	log.Infof("[设置消息] MsgID:%d, %s", xmlMsg.MsgId, UserMsgID[xmlMsg.FromUserName])
+		//	replyMsg = UserMsgID[xmlMsg.FromUserName]
+		//}
 	} else {
 		util.TodoEvent(w)
 		return
